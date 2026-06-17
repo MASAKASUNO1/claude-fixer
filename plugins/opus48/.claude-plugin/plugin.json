@@ -9,6 +9,5 @@
     "email": "corporate@bond-ai.co.jp"
   },
   "license": "MIT",
-  "keywords": ["opus", "hooks", "claude-opus-4-8"],
-  "hooks": "./hooks/hooks.json"
+  "keywords": ["opus", "hooks", "claude-opus-4-8"]
 }
