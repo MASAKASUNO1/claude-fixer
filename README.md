@@ -1,51 +1,73 @@
-# claude-fixer marketplace
+# claude-fixer
 
-Claude Code 用の自作プラグインを管理する marketplace。
+Claude Code 用プラグインの marketplace。中身は **opus48** — Claude の報告・通知・確認依頼を、事実を保ったまま一目で掴める形にする hook。
+
+## 導入（GitHub 経由）
+
+```bash
+# 1. marketplace を登録（GitHub リポジトリを指定）
+claude plugin marketplace add MASAKASUNO1/claude-fixer
+#    URL でも可: claude plugin marketplace add https://github.com/MASAKASUNO1/claude-fixer
+
+# 2. plugin をインストール（user scope = 全プロジェクトで有効。既定）
+claude plugin install opus48@claude-fixer
+
+# プロジェクト単位で入れるなら、そのディレクトリで:
+claude plugin install opus48@claude-fixer --scope project
+```
+
+Claude Code 内なら `/plugin` でも同じことができる:
+
+```
+/plugin marketplace add MASAKASUNO1/claude-fixer
+/plugin install opus48@claude-fixer
+```
+
+更新・削除:
+
+```bash
+claude plugin marketplace update claude-fixer   # 最新を取り込む
+claude plugin uninstall opus48@claude-fixer
+```
+
+要件: `jq`。無い環境では hook は無出力（no-op）になり、セッションは壊れず継続する。
+
+## opus48 が何をするか
+
+`UserPromptSubmit` hook が毎ターン、Claude の**報告・通知・確認依頼**を読みやすくするルールを `additionalContext` として注入する。
+
+- **結論と要対応を冒頭に。** 前置き・cushion・へりくだり定型句を排す。
+- **短い通知も長い構造化報告も両対応**（v0.1.2）。複数項目の報告では危険情報（破壊的変更・失敗・承認待ち）を前出しし、見出しを幹だけに畳む。
+- **情報パリティ防護。** 短くするのは表現だけ。一次事実（ファイル名・数値・失敗/flaky・破壊的変更・残作業・不確実性・根本原因）は削らない。読みやすさと情報量が衝突したら情報量を優先。
+- 対象は読みやすさのみ（正しさ・情報量・トーンは別軸）。
+
+理論（なぜ効くか／報告型ごとの「削るな」リスト）は **[docs/THEORY.md](docs/THEORY.md)**。
+
+実測（A/B・複雑な完了報告）: 読みやすさ採点 OFF 79 → ON 92、字数 約41%減でも一次事実は全保持。
 
 ## 構成
 
 ```
 .
 ├── .claude-plugin/
-│   └── marketplace.json        # marketplace "claude-fixer" の定義
-└── plugins/
-    └── opus48/                 # plugin "opus48"
-        ├── .claude-plugin/
-        │   └── plugin.json
-        ├── hooks/
-        │   └── hooks.json      # UserPromptSubmit で読みやすさルールを注入
-        └── scripts/
-            └── inject-readability-anchor.sh  # 注入ルール本体（heredoc を編集して変更）
+│   └── marketplace.json                          # marketplace "claude-fixer"
+├── plugins/
+│   └── opus48/
+│       ├── .claude-plugin/plugin.json
+│       ├── hooks/hooks.json                       # UserPromptSubmit → スクリプトへ
+│       └── scripts/inject-readability-anchor.sh   # ルール本体（heredoc を編集）
+└── docs/
+    ├── THEORY.md                                  # 認知的根拠・報告型タクソノミー
+    └── readability-anchor.html                    # 設計・検証の解説
 ```
 
-## ローカルでの登録・利用
+## ルールを変える
+
+`plugins/opus48/scripts/inject-readability-anchor.sh` の heredoc を編集してコミットする。GitHub 経由で入れた利用者は `claude plugin marketplace update claude-fixer` で取り込む。
+
+ローカルで試すなら、クローンしたディレクトリを直接登録できる:
 
 ```bash
-# 1. marketplace を登録（このディレクトリを指定）
-/plugin marketplace add /Users/eren/playground/opus48
-
-# 2. plugin をインストール
-/plugin install opus48@claude-fixer
-
-# 3. マニフェスト検証（任意）
-/plugin validate /Users/eren/playground/opus48
+claude plugin marketplace add ./claude-fixer      # ローカルパスを指定
+claude plugin validate ./claude-fixer             # マニフェスト検証（任意）
 ```
-
-更新したら `/plugin marketplace update claude-fixer` で再読み込みする。
-
-## opus48 plugin
-
-`hooks/hooks.json` に Opus 4.8 (`claude-opus-4-8`) 利用時の hooks を定義する。
-スクリプトを置く場合は plugin ルートからの絶対参照に `${CLAUDE_PLUGIN_ROOT}` を使う。
-
-### inject-readability-anchor.sh
-
-`UserPromptSubmit` hook。毎ターン、Claude がユーザーに返す**文末の報告・通知・確認依頼**を
-読みやすくするルールを `additionalContext` として注入する。基準は `ref-readability-essence` の
-`visual_short`（短文）アンカー — 結論を冒頭 / 先頭2語=内容語 / 改行=意味単位 / 前置きゼロ /
-一文一義 / cushion・へりくだり定型句の回避。WHY（作業記憶の負荷を肩代わりし再読ゼロにする理由）と
-bad→good の few-shot を内包し、旧 `inject-report-style.sh` の上位互換。
-
-- ルールを変えるときは同スクリプト内の heredoc を編集する。
-- JSON 化に `jq` を使う。`jq` が無い環境では何も注入せず no-op になり、セッションは継続する。
-- A/B 検証（visual_short rubric 採点）で baseline 22–28 点 → ルール適用後 92–95 点（4/4 シナリオ改善）。
