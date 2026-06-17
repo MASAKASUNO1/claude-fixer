@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "claude-fixer",
+  "owner": {
+    "name": "bond-ai",
+    "email": "corporate@bond-ai.co.jp"
+  },
+  "description": "Claude Code 用の自作プラグイン群。Opus 4.8 向けの挙動調整などをまとめる。",
+  "plugins": [
+    {
+      "name": "opus48",
+      "source": "./plugins/opus48",
+      "description": "Opus 4.8 (claude-opus-4-8) 利用時の hooks をまとめたプラグイン。"
+    }
+  ]
+}

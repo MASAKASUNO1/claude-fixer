@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
+  "name": "opus48",
+  "displayName": "Opus 4.8 Hooks",
+  "version": "0.1.0",
+  "description": "Opus 4.8 (claude-opus-4-8) 利用時の hooks をまとめたプラグイン。",
+  "author": {
+    "name": "bond-ai",
+    "email": "corporate@bond-ai.co.jp"
+  },
+  "license": "MIT",
+  "keywords": ["opus", "hooks", "claude-opus-4-8"],
+  "hooks": "./hooks/hooks.json"
+}
