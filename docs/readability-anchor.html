@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>opus48 readability-anchor 解説</title>
+<style>
+  :root {
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel2: #1c2330;
+    --border: #2a3140;
+    --text: #e6edf3;
+    --muted: #9aa7b5;
+    --accent: #6ea8fe;
+    --good: #46d39a;
+    --bad: #ff6b6b;
+    --warn: #ffcc66;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    line-height: 1.75;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 48px 24px 96px; }
+  header h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: .01em; }
+  header .sub { color: var(--muted); font-size: 15px; margin-bottom: 4px; }
+  header .meta { color: var(--muted); font-size: 13px; font-family: var(--mono); }
+  h2 {
+    font-size: 20px; margin: 56px 0 16px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    font-family: var(--mono); font-size: 13px; color: var(--bg);
+    background: var(--accent); border-radius: 6px; padding: 2px 8px; font-weight: 700;
+  }
+  h3 { font-size: 15px; color: var(--muted); margin: 28px 0 10px; font-weight: 600; }
+  p { margin: 10px 0; }
+  a { color: var(--accent); }
+  code { font-family: var(--mono); font-size: .9em; background: var(--panel2); padding: 1px 6px; border-radius: 5px; }
+  .tldr {
+    background: linear-gradient(135deg, #16202e, #161b22);
+    border: 1px solid var(--border); border-left: 4px solid var(--good);
+    border-radius: 12px; padding: 20px 24px; margin: 24px 0;
+  }
+  .tldr strong { color: var(--good); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px 22px; margin: 16px 0; }
+  .mermaid { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 18px 0; text-align: center; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; }
+  td.mono, th.mono { font-family: var(--mono); }
+  .bars td { vertical-align: middle; }
+  .bar-track { background: var(--panel2); border-radius: 6px; height: 22px; position: relative; overflow: hidden; min-width: 240px; }
+  .bar-base { position: absolute; top: 0; left: 0; height: 100%; background: rgba(255,107,107,.5); }
+  .bar-rule { position: absolute; top: 0; left: 0; height: 100%; background: rgba(70,211,154,.65); }
+  .bar-label { position: absolute; right: 8px; top: 0; height: 100%; display: flex; align-items: center; font-family: var(--mono); font-size: 12px; }
+  .legend { display: flex; gap: 18px; font-size: 13px; color: var(--muted); margin: 6px 2px 0; flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .ex { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 12px 0; }
+  .ex .pair { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .ex .row { display: grid; grid-template-columns: 56px 1fr; }
+  .ex .tag { padding: 12px; font-family: var(--mono); font-size: 12px; font-weight: 700; display: flex; align-items: flex-start; justify-content: center; }
+  .ex .bad .tag { background: rgba(255,107,107,.12); color: var(--bad); }
+  .ex .good .tag { background: rgba(70,211,154,.12); color: var(--good); }
+  .ex .txt { padding: 12px 14px; white-space: pre-wrap; }
+  .ex .bad { border-bottom: 1px solid var(--border); }
+  .ex .point { color: var(--muted); font-size: 13px; padding: 8px 14px; background: var(--panel2); }
+  ul.clean { margin: 8px 0; padding-left: 22px; }
+  ul.clean li { margin: 6px 0; }
+  .do { color: var(--good); }
+  .avoid { color: var(--bad); }
+  pre.code { background: #0a0d12; border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; }
+  .files td:first-child { font-family: var(--mono); }
+  .chip { font-family: var(--mono); font-size: 11px; padding: 2px 7px; border-radius: 5px; }
+  .chip.add { background: rgba(70,211,154,.15); color: var(--good); }
+  .chip.del { background: rgba(255,107,107,.15); color: var(--bad); }
+  .chip.mod { background: rgba(255,204,102,.15); color: var(--warn); }
+  footer { margin-top: 64px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>opus48 / readability-anchor</h1>
+  <div class="sub">Claude の通知・報告文を「一読で掴める」ようにする UserPromptSubmit hook を、設計から検証まで作った記録</div>
+  <div class="meta">repo: claude-fixer &nbsp;·&nbsp; plugin: opus48 &nbsp;·&nbsp; 2026-06-17</div>
+</header>
+
+<div class="tldr">
+  <strong>結論。</strong> <code>ref-readability-essence</code>（読みやすさ採点スキル）の <em>visual_short</em> アンカーを基に、Claude が返す文末の報告・通知を読みやすくするルールを毎ターン注入する hook を作った。
+  WHY と bad→good の few-shot を内包。A/B 検証で <strong>4/4 シナリオ改善・平均 +70 点</strong>（baseline 22–28 → 92–95）。
+</div>
+
+<h2><span class="num">01</span> 何をやったか（全体フロー）</h2>
+<p>private repo の参照スキルを根拠に、ルールを多エージェントで設計 → tmp で実物検証 → opus48 プラグインへ反映、という流れ。</p>
+<pre class="mermaid">
+flowchart LR
+  A["repo を clone<br/>claude-fixer"] --> B["参照スキル取得<br/>ref-readability-essence<br/>(gh api)"]
+  B --> C["ルール設計<br/>ultracode workflow<br/>Draft→Judge→Synthesize→Verify"]
+  C --> D["実物検証<br/>~/playground/tmp/<br/>JSON妥当性・hook契約・fallback"]
+  D --> E["プラグインへ反映<br/>script + hooks.json<br/>+ README"]
+  style C fill:#1c2a3e,stroke:#6ea8fe,color:#e6edf3
+  style D fill:#16241c,stroke:#46d39a,color:#e6edf3
+</pre>
+
+<h2><span class="num">02</span> 出来たルール（注入される中身）</h2>
+<p>毎ターン、UserPromptSubmit hook が下記を <code>additionalContext</code> として Claude に渡す。注入文自身も「結論先出し・前置きゼロ」で書いてある（自分の原則に違反しない）。全 533 字。</p>
+
+<div class="panel">
+  <h3>WHY（なぜ効くか）</h3>
+  <p>読み手の作業記憶は有限。結論を冒頭に置き一文一義にすれば、<strong>書き手が認知負荷を肩代わり</strong>でき、読み手は再読せず一読で意味を構築できる。読みやすさは理解の前提条件で、Claude が返す文末の報告・通知に最も効く。</p>
+
+  <h3>ルール</h3>
+  <ul class="clean">
+    <li><span class="do">do</span> — 結論/フックを冒頭1文に（最初の改行までで主旨が分かる）</li>
+    <li><span class="do">do</span> — 先頭2語は内容語（挨拶・定型句で始めない）</li>
+    <li><span class="do">do</span> — 一文一義（主張が2つなら文を割る）</li>
+    <li><span class="do">do</span> — 改行は意味の単位で（結論／詳細／次アクションを分ける）</li>
+    <li><span class="do">do</span> — 前置きゼロ（本題から始める）</li>
+    <li><span class="avoid">avoid</span> — cushion連結語『という形で』『することができる』『に関して』『にあたって』</li>
+    <li><span class="avoid">avoid</span> — へりくだり/硬い定型句『〜を実施いたしました』『〜に寄与すると考えられます』『ご不明な点がございましたらお気軽に』</li>
+    <li><span class="avoid">avoid</span> — 二重否定・意味重複・不要語</li>
+  </ul>
+
+  <h3>few-shot（bad → good）</h3>
+  <div class="ex">
+    <div class="pair">
+      <div class="row bad"><div class="tag">bad</div><div class="txt">ご依頼の件、修正を実施いたしました。</div></div>
+      <div class="row good"><div class="tag">good</div><div class="txt">認証モジュールを修正、テストは全通過。
+　login.ts の有効期限チェックを直しました。</div></div>
+      <div class="point">先頭を定型句→内容語『認証モジュール』へ。へりくだりを削り結論を冒頭、詳細を別行に。</div>
+    </div>
+    <div class="pair">
+      <div class="row bad"><div class="tag">bad</div><div class="txt">エラーが発生してしまったようです。</div></div>
+      <div class="row good"><div class="tag">good</div><div class="txt">ビルド失敗。原因は依存のバージョン不整合です。
+　package.json を揃えれば直ります。</div></div>
+      <div class="point">結論=失敗を冒頭1文に。原因と対処を改行で意味単位に分割。</div>
+    </div>
+    <div class="pair">
+      <div class="row bad"><div class="tag">bad</div><div class="txt">念のための確認となるのですが、こちらのファイルを削除する形で進めてもよろしいでしょうか。</div></div>
+      <div class="row good"><div class="tag">good</div><div class="txt">このファイルを削除してよいですか。
+　戻せない操作なので確認したいです。</div></div>
+      <div class="point">前置きと cushion『する形で』を削り、依頼を冒頭に。理由は別行。</div>
+    </div>
+  </div>
+</div>
+
+<h2><span class="num">03</span> ランタイム：hook がどう効くか（シーケンス）</h2>
+<p>ユーザーが送信するたびに hook が走り、ルールが文脈に足される。Claude はそれを読んで読みやすい返信を書く。</p>
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  actor U as ユーザー
+  participant CC as Claude Code
+  participant H as inject-readability-anchor.sh
+  participant J as jq
+  participant CL as Claude (opus 4.8)
+
+  U->>CC: プロンプト送信
+  CC->>H: UserPromptSubmit hook 起動<br/>(イベントJSONをstdinへ)
+  Note over H: stdin は使わず<br/>heredoc のルールを読む
+  alt jq あり
+    H->>J: --arg ctx で JSON 化
+    J-->>H: {hookSpecificOutput:{additionalContext:...}}
+    H-->>CC: ルールJSONを stdout へ
+    CC->>CL: ユーザー入力 + additionalContext(ルール)
+  else jq なし
+    H-->>CC: 無出力 (no-op)
+    CC->>CL: ユーザー入力のみ（セッション継続）
+  end
+  CL-->>U: 結論先出し・前置きゼロの読みやすい返信
+</pre>
+
+<h2><span class="num">04</span> 設計：ultracode workflow（シーケンス）</h2>
+<p>ルール文そのものを多エージェントで設計した。4案を別々の切り口で起草 → 3レンズで審査 → 接ぎ木で統合 → A/B採点で検証。16エージェント / 約23.8万トークン / 約211秒。</p>
+<pre class="mermaid">
+sequenceDiagram
+  autonumber
+  participant O as Orchestrator
+  participant D as Draft ×4<br/>(terse / why-forward<br/>/ fewshot / checklist)
+  participant J as Judge ×3<br/>(fidelity / self-read<br/>/ pedagogy)
+  participant S as Synthesize
+  participant V as Verify<br/>(gen→score ×4シナリオ)
+
+  O->>D: 各切り口で注入ルールを起草（並列）
+  D-->>O: 4案 (WHY+rules+few-shot)
+  O->>J: 全4案を3レンズでランク付け（並列・バリア）
+  J-->>O: ranking / best_elements / pitfalls
+  Note over O,S: fidelity→why-forward, self-read→checklist,<br/>pedagogy→fewshot が各レンズ1位
+  O->>S: 勝者の核を接ぎ木して最終ルール生成
+  S-->>O: 最終 additionalContext (533字)
+  O->>V: 4シナリオで baseline と withrule を生成→rubric採点（pipeline）
+  V-->>O: 4/4 improved, 平均 +70点
+</pre>
+
+<h2><span class="num">05</span> A/B 検証結果</h2>
+<p>各シナリオで「堅い定型文の baseline」と「ルール適用版」を生成し、<em>visual_short</em> rubric（0–100, 読みやすさのみ）で採点。</p>
+<div class="legend">
+  <span><span class="dot" style="background:rgba(255,107,107,.6)"></span>baseline（ルールなし）</span>
+  <span><span class="dot" style="background:rgba(70,211,154,.7)"></span>withrule（ルールあり）</span>
+</div>
+<table class="bars">
+  <thead><tr><th>シナリオ</th><th>スコア（0–100）</th><th class="mono">delta</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>作業完了の報告</td>
+      <td><div class="bar-track"><div class="bar-rule" style="width:92%"></div><div class="bar-base" style="width:22%"></div><div class="bar-label">22 → 92</div></div></td>
+      <td class="mono good">+70</td>
+    </tr>
+    <tr>
+      <td>エラー通知</td>
+      <td><div class="bar-track"><div class="bar-rule" style="width:94%"></div><div class="bar-base" style="width:22%"></div><div class="bar-label">22 → 94</div></div></td>
+      <td class="mono good">+72</td>
+    </tr>
+    <tr>
+      <td>破壊的操作の確認依頼</td>
+      <td><div class="bar-track"><div class="bar-rule" style="width:94%"></div><div class="bar-base" style="width:22%"></div><div class="bar-label">22 → 94</div></div></td>
+      <td class="mono good">+72</td>
+    </tr>
+    <tr>
+      <td>調査結果のまとめ</td>
+      <td><div class="bar-track"><div class="bar-rule" style="width:95%"></div><div class="bar-base" style="width:28%"></div><div class="bar-label">28 → 95</div></div></td>
+      <td class="mono good">+67</td>
+    </tr>
+  </tbody>
+</table>
+<p style="color:var(--muted);font-size:14px">baseline の主な減点理由: <code>X-12</code> 結論の引き延ばし（冒頭が挨拶で主旨が後ろ）／<code>X-14</code> 薄い先頭（先頭2語が定型句）／<code>X-2</code> へりくだり定型句の多発／改行ゼロの壁テキスト。ルール版はこれらをほぼ解消した。</p>
+
+<h2><span class="num">06</span> 実物検証（~/playground/tmp/）</h2>
+<p>反映前に tmp でスクリプトを実行し、hook 契約を確認した。</p>
+<ul class="clean">
+  <li><span class="do">OK</span> — <code>jq -e .</code> で妥当な JSON。<code>hookEventName = UserPromptSubmit</code>、注入 533 字</li>
+  <li><span class="do">OK</span> — stdin に hook イベントJSONを流しても無視し、正しい additionalContext を出力</li>
+  <li><span class="do">OK</span> — <code>jq</code> が無い環境（PATH剥奪）では<strong>無出力の no-op</strong>。セッションを壊さない</li>
+</ul>
+<pre class="code">RULE=$(cat &lt;&lt;'EOF'
+【返信の読みやすさルール｜文末の報告・通知・確認依頼】
+... (WHY → do/avoid → few-shot) ...
+EOF
+)
+
+if command -v jq &gt;/dev/null 2>&amp;1; then
+  jq -n --arg ctx "$RULE" \
+    '{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:$ctx}}'
+fi</pre>
+
+<h2><span class="num">07</span> 変更ファイル</h2>
+<table class="files">
+  <thead><tr><th>ファイル</th><th>変更</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>plugins/opus48/scripts/inject-readability-anchor.sh</td><td><span class="chip add">追加</span></td><td>ルール本体。heredoc を編集すれば中身を変えられる</td></tr>
+    <tr><td>plugins/opus48/scripts/inject-report-style.sh</td><td><span class="chip del">撤去</span></td><td>上位互換に置き換え（へりくだり回避の意図は新ルールに内包）</td></tr>
+    <tr><td>plugins/opus48/hooks/hooks.json</td><td><span class="chip mod">変更</span></td><td>UserPromptSubmit を新スクリプトへ付け替え</td></tr>
+    <tr><td>README.md</td><td><span class="chip mod">変更</span></td><td>構成図と opus48 節を更新</td></tr>
+    <tr><td>docs/readability-anchor.html</td><td><span class="chip add">追加</span></td><td>この解説</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  根拠スキル: <code>ref-readability-essence</code>（BondAI-Japan/masao-origin, pg-sns）。対象は読みやすさ＝認知負荷の低さのみで、正しさ・情報量・面白さは別評価。図は Mermaid（CDN）でレンダリング。
+</footer>
+
+</div>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', securityLevel: 'loose', sequence: { useMaxWidth: true } });
+</script>
+</body>
+</html>
